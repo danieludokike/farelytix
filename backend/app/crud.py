@@ -1,10 +1,9 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from datetime import datetime
+from datetime import datetime, timezone
 from . import models, schemas
 
-# TrackedSearch
-def create_tracked_search(db: Session, data: schemas.TrackedSearchCreate) -> models.TrackedSearch:
+def create_tracked_search(db: Session, data: schemas.TrackedSearchCreate):
     obj = models.TrackedSearch(
         origin=data.origin.upper(),
         destination=data.destination.upper(),
@@ -26,21 +25,14 @@ def list_tracked_searches(db: Session):
 def get_tracked_search(db: Session, tracked_id: str):
     return db.get(models.TrackedSearch, tracked_id)
 
-# Snapshots
-def add_price_snapshot(
-    db: Session,
-    tracked_id: str,
-    price_cents: int,
-    currency: str = "USD",
-    flights_json=None,
-    provider: str | None = None,
-):
+def add_price_snapshot(db: Session, tracked_id: str, price_cents: int,
+                       currency: str = "USD", flights_json=None, provider: str | None = None):
     snap = models.PriceSnapshot(
         tracked_search_id=tracked_id,
         provider=provider,
         price_cents=price_cents,
         currency=currency,
-        scraped_at=datetime.utcnow(),
+        scraped_at=datetime.now(timezone.utc),
         flights_json=flights_json,
     )
     db.add(snap)
