@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import date, datetime
 
-# Input DTOs
 class TrackedSearchCreate(BaseModel):
     origin: str
     destination: str
@@ -12,12 +11,11 @@ class TrackedSearchCreate(BaseModel):
     passengers: int = 1
     cabin_class: Optional[str] = None
 
-# Output
 class TrackedSearchOut(TrackedSearchCreate):
     id: str
     created_at: datetime
     class Config:
-        from_attributes = True  # pydantic v2
+        from_attributes = True
 
 class PricePoint(BaseModel):
     ds: datetime | date
