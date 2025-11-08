@@ -1,172 +1,151 @@
-# Farelytix — Intelligent Flight Price Monitoring & Forecasting System
+# ✈️ Farelytix — Intelligent Flight Price Monitoring & Forecasting System
 
 **Farelytix** is a smart, data-driven platform that tracks, analyzes, and predicts flight prices in real time.  
-It automatically scrapes airfare data, stores it in a structured database, and applies forecasting models to detect price trends and alert users before prices rise or drop.
+It collects airfare data (from APIs or simulated inputs), stores it in a structured database, and applies lightweight forecasting to visualize price trends and volatility.
 
-Built with **FastAPI**, **Playwright**, **PostgreSQL**, and **Plotly**, Farelytix combines backend engineering, data processing, and machine learning in one cohesive system.
+This is the **MVP (Minimum Viable Product)** version — built entirely in **Python** with a **FastAPI backend** and an interactive **Streamlit dashboard** for visualization.
 
----
 
 ## 🚀 Features
 
-- 🧭 **Automated Flight Price Tracking**
-  - Periodically scrapes prices for user-defined routes and dates from supported travel providers.
+- 🧭 **Flight Price Tracking (Simulated or via API)**
+  - Define flight routes and providers, then fetch or simulate live ticket data.
+  - Data is stored automatically in a structured SQLite database.
 
 - 📊 **Historical Data Storage**
-  - Maintains a complete time-series history of price changes and flight metadata.
+  - Keeps a complete record of flight price snapshots per route and provider.
 
 - 🤖 **Price Forecasting**
-  - Uses Prophet and other ML models to forecast short-term price trends with confidence intervals.
+  - Uses a simple pure-Python moving-average + drift model to forecast short-term prices.
+  - Forecasts include upper/lower confidence bounds.
 
-- 🔔 **Smart Alerts**
-  - Notifies users when price thresholds or forecast-based signals are triggered (email, Telegram, etc.).
+- 📈 **Interactive Dashboard**
+  - Built with **Streamlit** and **Plotly**.
+  - Displays live prices, trends, volatility metrics, and forecast curves.
 
-- 📈 **Interactive Visualization**
-  - Simple frontend powered by **Plotly.js** to visualize price trends, forecasts, and volatility over time.
-
-- 🧩 **Modular Architecture**
-  - Separated services for API, scrapers, background workers, and UI—each containerized and easy to scale.
+- 🧩 **Extensible Architecture**
+  - Easily integrate real Flight APIs (Amadeus, Kiwi, Skyscanner, etc.).
+  - Forecasting model can be upgraded to Prophet, LightGBM, or LSTM.
+  - Modular design — backend and dashboard are independent but connected via API.
 
 
 ## ⚙️ Tech Stack
 
 | Layer | Technology |
 |-------|-------------|
-| **API / Backend** | FastAPI, SQLAlchemy, Pydantic |
-| **Scraping** | Playwright (headless Chromium) |
-| **Database** | PostgreSQL (TimescaleDB optional) |
-| **Background Jobs** | Celery + Redis |
-| **Forecasting / ML** | Prophet, scikit-learn, pandas |
-| **Visualization** | Plotly.js (frontend) |
-| **Containerization** | Docker, Docker Compose |
-| **Deployment** | Render / Railway / AWS / DigitalOcean |
+| **Backend API** | FastAPI, SQLAlchemy, Pydantic |
+| **Database** | SQLite (local) |
+| **Frontend / Dashboard** | Streamlit + Plotly |
+| **Forecasting** | Custom Python logic (Mean + Drift) |
+| **Optional Integration** | Flight Ticket APIs (Amadeus / Kiwi / Skyscanner) |
+| **Language** | Python 3.10+ |
 
----
 
-## Data Flow Overview
+## 🧩 Project Structure
+```
+Farelytix/
+├─ backend/
+│ └─ app/
+│ ├─ main.py # FastAPI entrypoint
+│ ├─ db.py # SQLAlchemy DB engine
+│ ├─ models.py # ORM models
+│ ├─ schemas.py # Pydantic models
+│ ├─ crud.py # Database operations
+│ ├─ services/
+│ │ └─ forecast.py # Forecasting logic
+│ └─ api/
+│ ├─ tracked_search.py # Route creation/list API
+│ └─ prices.py # Price history + forecast API
+├─ dashboard/
+│ └─ app_streamlit.py # Streamlit dashboard UI
+├─ scripts/
+│ └─ seed_demo_data.py # Generates sample DB data
+├─ requirements.txt
+└─ run_dev.sh # Run API + dashboard together
+```
 
-1. **Tracked Search Creation**  
-   User defines a route (origin → destination), provider, and date range.
+## 🧰 Local Development Setup
 
-2. **Scheduler / Worker Trigger**  
-   Celery or cron schedules scraping jobs periodically.
-
-3. **Scraping Layer**  
-   Playwright opens provider pages, extracts price info, and saves structured snapshots.
-
-4. **ETL & Database Storage**  
-   Snapshots are normalized and stored in PostgreSQL.
-
-5. **Forecast Engine**  
-   Daily jobs use Prophet or ML models to forecast next 7–14 days of prices.
-
-6. **Signal & Alerts Engine**  
-   Detects opportunities (price drops or forecasted hikes) and notifies users.
-
-7. **Visualization Layer**  
-   Frontend (Plotly.js) fetches from FastAPI and displays interactive charts and metrics.
-
----
-
-## Example API
-
-### `GET /api/prices/{tracked_id}`
-```json
-{
-  "id": "demo-route-nyc-lhr",
-  "currency": "USD",
-  "series": [
-    {"ds":"2025-10-01","price":320.00},
-    {"ds":"2025-10-05","price":310.00}
-  ],
-  "forecast": [
-    {"ds":"2025-10-11","yhat":305.0,"yhat_lower":290.0,"yhat_upper":320.0}
-  ]
-}
-POST /api/tracked-search
-json
-
-{
-  "origin": "LGA",
-  "destination": "LHR",
-  "depart_date": "2026-01-15",
-  "provider": "ProviderX"
-}
-🧰 Local Development Setup
-1. Clone and setup environment
-bash
-
+### 1️⃣ Clone and setup environment
+```bash
 git clone https://github.com/danieludokike/farelytix.git
 cd farelytix
-cp .env
-2. Run with Docker (recommended)
-bash
-
-docker compose -f infra/docker-compose.yml up --build
-This spins up:
-
-PostgreSQL
-
-Redis
-
-FastAPI backend
-
-Scraper workers
-
-Frontend static UI
-
-3. Run backend manually (alternative)
-bash
-
-cd backend
+python -m venv env
+source env/bin/activate      # or .\env\Scripts\Activate.ps1 on Windows
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-4. Open frontend
-Open frontend/static/index.html in your browser or run:
+```
+### 2️⃣ Seed demo data (optional)
+```bash
+python -m scripts.seed_demo_data
+```
+This creates farelytix.db and seeds it with demo price data.
 
-bash
+### 3️⃣ Start the backend API
+```bash
+uvicorn backend.app.main:app --reload --port 8000
+Visit: http://127.0.0.1:8000/docs
+```
 
-cd frontend/static
-python -m http.server 8080
-Then visit: http://localhost:8080
+### 4️⃣ Launch the dashboard
+In another terminal:
 
-🧪 Testing
-bash
+```bash
+streamlit run dashboard/app_streamlit.py
+Visit: http://localhost:8501
+```
 
-pytest tests/ --maxfail=1 --disable-warnings -q
-Unit tests for scrapers (HTML parsing).
+### 5️⃣ Run both together (optional)
+```bash
+./run_dev.sh
+🔁 Example API Responses
+GET /api/prices/{tracked_id}
+json
+{
+  "id": "c86093c6-5152-45b2-9f45-6590c80194da",
+  "currency": "USD",
+  "series": [
+    {"ds": "2025-11-01T00:00:00Z", "price": 340.00},
+    {"ds": "2025-11-03T00:00:00Z", "price": 330.00}
+  ],
+  "forecast": [
+    {"ds": "2025-11-09T00:00:00Z", "yhat": 335.0, "yhat_lower": 320.0, "yhat_upper": 350.0}
+  ]
+}
+POST /api/prices/dev/random-snapshot/{tracked_id}
+Adds a random price snapshot (for demo purposes).
 
-Integration tests for FastAPI endpoints (uses a test DB).
+🧠 How It Works
+Tracked Search Creation
+User defines a flight route (origin → destination, provider, etc.).
 
-📦 Deployment
-Farelytix can be deployed using any modern container platform:
+Snapshot Generation
+Either simulate new snapshots via the /dev/random-snapshot endpoint
+or fetch real data from a flight ticket API (Amadeus, Kiwi, etc.).
 
-Render / Railway → simple Docker deployment
+Data Storage
+Each snapshot is stored in SQLite via SQLAlchemy.
 
-AWS ECS / EC2 → production ready
+Forecast Engine
+The backend computes a simple 3-day forecast using the last price trend.
 
-Vercel (for frontend only)
+Visualization Layer
+Streamlit dashboard fetches API data, plots history + forecast in real time.
 
-GitHub Actions → for CI/CD & image build automation
+🧠 Coming Next
+🌐 Integration with real flight APIs (Amadeus, Kiwi, Skyscanner)
 
-🧩 Roadmap
- Multi-provider scraping integration
+🔮 Advanced forecasting (Prophet, LightGBM, LSTM)
 
- Authentication & user dashboards
+🔔 Price alerts via email or Telegram
 
- Telegram & email alerting
+🐳 Docker containerization
 
- Advanced forecasting (LightGBM / LSTM)
-
- Data analytics API for partners
-
- Cloud deployment templates (AWS / Railway)
-
-🧠 About the Project
-Farelytix is part of an ongoing personal initiative to build full-stack, data-intensive applications that combine backend engineering, data analytics, and automation.
-It demonstrates practical skills in web scraping, data pipeline design, ML forecasting, and backend architecture — all built with clean, testable Python code.
+📊 Data analytics dashboard for historical trends
 
 🧑‍💻 Author
-Udokike Daniel
+Ikegbunam Daniel
 Founder, SkillRover Technologies
 Python Developer | Backend Engineer | Tech Educator
+
+📍 Nigeria
+https://github.com/danieludokike/

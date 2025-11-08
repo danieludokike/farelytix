@@ -1,3 +1,4 @@
+
 from datetime import timedelta
 
 def simple_forecast(series, horizon: int = 7):
